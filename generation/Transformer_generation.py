@@ -51,12 +51,6 @@ def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
     x = x + res
     return x
 
-
-# # Build the model
-# sequence_length = 100
-# feature_dim = 5
-# n_notes = 576
-
 def build_transformer_model(sequence_length, feature_dim, n_notes):
     embedding_dim = 512
     num_transformer_blocks = 2
@@ -81,16 +75,9 @@ def build_transformer_model(sequence_length, feature_dim, n_notes):
     return Model(inputs=inputs, outputs=outputs)
 
 
-# Load the model and weights
-# model = build_transformer_model(sequence_length, feature_dim, n_notes)
-# weights_path = r'trained-models\weights-epoch-10-loss-4.1157-acc-0.2215.weights.h5'
-# model.load_weights(weights_path)
-
 # Method that calls the other method that builds the model, then loads the trained weights
 def load_transformer_model(sequence_length, n_unique_notes, feature_dim,
-                           checkpoint_path=r'C:\Users\Brandon Salim\PycharmProjects\TASem3\AI-FinalProject-Backend'
-                                           r'\generation\trained-models\weights-epoch-10-loss-4.1157-acc-0.2215'
-                                           r'.weights.h5'):
+                           checkpoint_path):
     model = build_transformer_model(sequence_length, feature_dim, n_unique_notes)
     model.load_weights(checkpoint_path)
 
@@ -98,8 +85,8 @@ def load_transformer_model(sequence_length, n_unique_notes, feature_dim,
 
 
 # Method to load mappings
-def load_mappings(mapping_path=r'C:\Users\Brandon Salim\PycharmProjects\TASem3\AI-FinalProject-Backend\generation'
-                               r'\Subset_Dataset\note_to_int.pkl'):
+def load_mappings(dataset_path):
+    mapping_path = os.path.join(dataset_path, "note_to_int.pkl")
     with open(mapping_path, 'rb') as f:
         note_to_int = pickle.load(f)
     int_to_note = {number: note for note, number in note_to_int.items()}
@@ -111,20 +98,6 @@ def load_mappings(mapping_path=r'C:\Users\Brandon Salim\PycharmProjects\TASem3\A
 def load_start_sequence(sequence_length, feature_dim):
     start_sequence = np.random.rand(sequence_length, feature_dim)
     return start_sequence
-
-
-# # Load the mappings and data
-# with open('Subset_Dataset/note_to_int.pkl', 'rb') as f:
-#     note_to_int = pickle.load(f)
-#
-# int_to_note = {number: note for note, number in note_to_int.items()}
-#
-# # Define rest indices
-# rest_indices = [index for index, note_str in int_to_note.items() if note_str.lower() == 'rest' or note_str == 'R']
-
-# Define valid C Major notes and MIDI range
-# c_major_notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
-# valid_midi_range = range(60, 71)  # MIDI values for C4 to B5 inclusive
 
 # Define function to generate music
 def generate_music_transformer(
@@ -190,25 +163,6 @@ def generate_music_transformer(
             print(f"Skipping chord or invalid pattern: {predicted_note}")
             continue  # Skip chord-like patterns
 
-        # Replace G4 with another random note from the list
-        # THIS IS JUST A TEST. IT JUST MAKES ANOTHER NOTE GET SPAMMED.
-        # if predicted_note == 'G4':
-        #     print(f"G4 detected. Replacing with a random note from C Major based on weights.")
-        #     valid_indices = [
-        #         i for i, note_str in int_to_note.items()
-        #         if note_str[:-1] in c_major_notes and
-        #         note.Note(note_str).pitch.midi in valid_midi_range and
-        #         note_str != 'G4'  # Exclude G4 from valid replacements
-        #     ]
-        #     if valid_indices:
-        #         valid_probabilities = [predictions[i] for i in valid_indices]
-        #         valid_probabilities = valid_probabilities / np.sum(valid_probabilities)
-        #         index = np.random.choice(valid_indices, p=valid_probabilities)
-        #         predicted_note = int_to_note[index]
-        #         print(f"Replaced G4 with: {predicted_note}")
-        #     else:
-        #         raise ValueError("No valid notes in C Major for G4 replacement found.")
-
         # Ensure note is within valid MIDI range
         note_midi = note.Note(predicted_note).pitch.midi
         if note_midi not in valid_midi_range:
@@ -270,39 +224,18 @@ def create_midi(
     output_stream.write('midi', fp=output_file)
 
 
-# # Generate music
-# start_sequence = np.random.rand(sequence_length, feature_dim)  # Replace with your actual start sequence
-# generated_notes, generated_durations = generate_music_transformer(
-#     model,
-#     start_sequence,
-#     int_to_note,
-#     rest_indices,
-#     n_generate=75,
-#     temperature=8
-# )
-#
-# # Save to MIDI
-# create_midi(
-#     generated_notes,
-#     generated_durations,
-#     output_file='generated_music_result/A_generated_music_transformer.mid'
-# )
-#
-# print("Music generation complete. Saved to 'A_generated_music_transformer.mid'.")
-
-
 # Main method that calls all the other ones, and the one that'll be used later
 def main_transformer_generate_music(
         amount_of_notes, valid_notes, range_lower, range_upper,
-        tempo, temperature, durations, output_path
-):
-    model = load_transformer_model(sequence_length=100, n_unique_notes=576, feature_dim=5,
-                                   checkpoint_path=r'C:\Users\Brandon Salim\PycharmProjects\TASem3\AI-FinalProject'
-                                                   r'-Backend\generation\trained-models\weights-epoch-10-loss-4.1157'
-                                                   r'-acc-0.2215.weights.h5')
+        tempo, temperature, durations, dataset_path, model_weights_path, output_path
 
+):
+    model_path = os.path.join(model_weights_path, "weights-epoch-10-loss-4.1157-acc-0.2215.weights.h5")
+
+    model = load_transformer_model(sequence_length=100, n_unique_notes=576, feature_dim=5,
+                                   checkpoint_path=model_path)
     # Load mappings
-    note_to_int, int_to_note, rest_indices = load_mappings()
+    note_to_int, int_to_note, rest_indices = load_mappings(dataset_path)
 
     # Prepare the start sequence
     start_sequence = load_start_sequence(feature_dim=5, sequence_length=100)
@@ -324,8 +257,3 @@ def main_transformer_generate_music(
     print("Music generation complete. Saved to 'generated_music_transformer_E10.mid'.")
 
     return output_path
-
-
-# # Test main method
-# main_transformer_generate_music('Transformer', 100, ['C', 'D', 'E', 'F', 'G', 'A', 'B'], 40, 45, 100, 0.5,
-#                                 [0, 0.3, 0.2, 0.15, 0.35])

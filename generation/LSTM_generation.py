@@ -30,8 +30,8 @@ def load_LSTM_model(sequence_length, n_unique_notes, checkpoint_path):
 
 
 # Method to load mappings
-def load_mappings(mapping_path=r'C:\Users\Brandon Salim\PycharmProjects\TASem3\AI-FinalProject-Backend\generation'
-                               r'\Subset_Dataset/note_to_int.pkl'):
+def load_mappings(dataset_path):
+    mapping_path = os.path.join(dataset_path, "note_to_int.pkl")
     with open(mapping_path, 'rb') as f:
         note_to_int = pickle.load(f)
     int_to_note = {number: note for note, number in note_to_int.items()}
@@ -41,21 +41,22 @@ def load_mappings(mapping_path=r'C:\Users\Brandon Salim\PycharmProjects\TASem3\A
 
 
 # Method to choose star sequence
-def load_start_sequence():
-    with open(r'C:\Users\Brandon Salim\PycharmProjects\TASem3\AI-FinalProject-Backend\generation\Subset_Dataset'
-              r'\input_sequences_notes.pkl', 'rb') as f:
+def load_start_sequence(dataset_path):
+    X_notes_path = os.path.join(dataset_path, "input_sequences_notes.pkl")
+    X_durations_path = os.path.join(dataset_path, "input_sequences_durations.pkl")
+    X_tempos_path = os.path.join(dataset_path, "input_sequences_tempos.pkl")
+    X_time_signatures_path = os.path.join(dataset_path, "input_sequences_time_signatures.pkl")
+    X_key_signatures_path = os.path.join(dataset_path, "input_sequences_key_signatures.pkl")
+
+    with open(X_notes_path, 'rb') as f:
         X_notes = pickle.load(f)
-    with open(r'C:\Users\Brandon Salim\PycharmProjects\TASem3\AI-FinalProject-Backend\generation\Subset_Dataset'
-              r'\input_sequences_durations.pkl', 'rb') as f:
+    with open(X_durations_path, 'rb') as f:
         X_durations = pickle.load(f)
-    with open(r'C:\Users\Brandon Salim\PycharmProjects\TASem3\AI-FinalProject-Backend\generation\Subset_Dataset'
-              r'\input_sequences_tempos.pkl', 'rb') as f:
+    with open(X_tempos_path, 'rb') as f:
         X_tempos = pickle.load(f)
-    with open(r'C:\Users\Brandon Salim\PycharmProjects\TASem3\AI-FinalProject-Backend\generation\Subset_Dataset'
-              r'\input_sequences_time_signatures.pkl', 'rb') as f:
+    with open(X_time_signatures_path, 'rb') as f:
         X_time_signatures = pickle.load(f)
-    with open(r'C:\Users\Brandon Salim\PycharmProjects\TASem3\AI-FinalProject-Backend\generation\Subset_Dataset'
-              r'\input_sequences_key_signatures.pkl', 'rb') as f:
+    with open(X_key_signatures_path, 'rb') as f:
         X_key_signatures = pickle.load(f)
 
     # Concatenate all features to create the full start sequence
@@ -174,18 +175,17 @@ def create_midi(generated_notes, generated_durations, output_file, tempo_bpm=120
 # Main method that calls all the other ones, and the one that'll be used later
 def main_lstm_generate_music(
         amount_of_notes, valid_notes, range_lower, range_upper,
-        tempo, temperature, durations, output_path
+        tempo, temperature, durations, dataset_path, model_weights_path, output_path
 ):
+    model_path = os.path.join(model_weights_path, "weights-epoch-30-loss-1.7863-acc-0.5304.weights.h5")
     model = load_LSTM_model(sequence_length=100, n_unique_notes=576,
-                            checkpoint_path=r'C:\Users\Brandon Salim\PycharmProjects\TASem3\AI-FinalProject-Backend'
-                                            r'\generation\trained-models\weights-epoch-30-loss-1.7863-acc-0.5304'
-                                            r'.weights.h5')
+                            checkpoint_path=model_path)
 
     # Load mappings
-    note_to_int, int_to_note, rest_indices = load_mappings()
+    note_to_int, int_to_note, rest_indices = load_mappings(dataset_path)
 
     # Prepare the start sequence
-    start_sequence = load_start_sequence()
+    start_sequence = load_start_sequence(dataset_path)
 
     durations.reverse()
 
@@ -203,8 +203,3 @@ def main_lstm_generate_music(
     print("Music generation complete.")
 
     return output_path
-
-
-# # Test main method
-# main_lstm_generate_music('LSTM', 100, ['C#', 'D', 'E', 'F#', 'G#', 'A', 'B'], 40, 45, 100, 0.5,
-#                          [0, 0.3, 0.2, 0.15, 0.35])

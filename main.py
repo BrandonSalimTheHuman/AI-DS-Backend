@@ -6,6 +6,12 @@ from generation.GRU_generation import main_gru_generate_music
 from generation.LSTM_generation import main_lstm_generate_music
 from generation.Transformer_generation import main_transformer_generate_music
 import tempfile
+import os
+
+# environment variables
+subset_dataset_path = os.getenv("SUBSET_DATASET_PATH", "./generation/subset_dataset")
+weights_path = os.getenv("WEIGHTS_PATH", "./generation/trained-models")
+
 
 app = FastAPI()
 
@@ -48,7 +54,9 @@ def generate_music_endpoint(request: MusicGenerationRequest):
                 tempo=request.tempo,
                 temperature=request.temperature,
                 durations=request.durations,
-                output_path = temp_file_path
+                dataset_path=subset_dataset_path,
+                model_weights_path=weights_path,
+                output_path=temp_file_path
             )
         elif request.model_type.lower() == "gru":
             output_path = main_gru_generate_music(
@@ -59,6 +67,8 @@ def generate_music_endpoint(request: MusicGenerationRequest):
                 tempo=request.tempo,
                 temperature=request.temperature,
                 durations=request.durations,
+                dataset_path=subset_dataset_path,
+                model_weights_path=weights_path,
                 output_path=temp_file_path
             )
         elif request.model_type.lower() == "transformer":
@@ -70,6 +80,8 @@ def generate_music_endpoint(request: MusicGenerationRequest):
                 tempo=request.tempo,
                 temperature=request.temperature,
                 durations=request.durations,
+                dataset_path=subset_dataset_path,
+                model_weights_path=weights_path,
                 output_path=temp_file_path
             )
         else:
