@@ -40,6 +40,7 @@ class MusicGenerationRequest(BaseModel):
 @app.post("/generate-music/")
 def generate_music_endpoint(request: MusicGenerationRequest):
     try:
+        print(weights_path)
         # Create a temporary file for the MIDI output
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mid") as temp_file:
             temp_file_path = temp_file.name
