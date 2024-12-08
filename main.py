@@ -18,10 +18,11 @@ app = FastAPI()
 # cors
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://ai-ds-frontend.vercel.app"],
+    allow_origins=["https://ai-ds-frontend.vercel.app", "https://ai-ds-frontend-brandon-salims-projects.vercel.app",
+                   "https://ai-ds-frontend-git-main-brandon-salims-projects.vercel.app/"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
