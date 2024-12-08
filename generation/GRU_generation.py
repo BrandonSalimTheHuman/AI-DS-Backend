@@ -30,27 +30,35 @@ def load_gru_model(sequence_length, n_unique_notes, checkpoint_path):
 
 # Method to load mappings
 def load_mappings(dataset_path):
-    mapping_path = os.path.join(dataset_path, "note_to_int.pkl")
-    print(f"Loading mapping from: {mapping_path}")
-    if not os.path.exists(mapping_path):
-        raise Exception(f"Model file not found at: {mapping_path}")
-    with open(mapping_path, 'rb') as f:
-        note_to_int = pickle.load(f)
-    int_to_note = {number: note for note, number in note_to_int.items()}
-    rest_indices = [index for index, note in int_to_note.items() if note.lower() == 'rest' or note == 'R']
-    return note_to_int, int_to_note, rest_indices
+    try:
+        mapping_path = os.path.join(dataset_path, "note_to_int.pkl")
+        print(f"Loading mapping from: {mapping_path}")
+        if not os.path.exists(mapping_path):
+            raise Exception(f"Model file not found at: {mapping_path}")
+        with open(mapping_path, 'rb') as f:
+            note_to_int = pickle.load(f)
+        int_to_note = {number: note for note, number in note_to_int.items()}
+        rest_indices = [index for index, note in int_to_note.items() if note.lower() == 'rest' or note == 'R']
+        return note_to_int, int_to_note, rest_indices
+    except Exception as e:
+        print(f"Error loading mappings: {e}")
+        raise
 
 
 # Method to choose star sequence
 def load_start_sequence(dataset_path):
-    training_data_path = os.path.join(dataset_path, "input_sequences_notes.pkl")
-    print(f"Loading training data from: {training_data_path}")
-    if not os.path.exists(training_data_path):
-        raise Exception(f"Model file not found at: {training_data_path}")
-    with open(training_data_path, 'rb') as f:
-        X_notes = pickle.load(f)
-    start_sequence = X_notes[np.random.randint(0, len(X_notes))]
-    return start_sequence
+    try:
+        training_data_path = os.path.join(dataset_path, "input_sequences_notes.pkl")
+        print(f"Loading training data from: {training_data_path}")
+        if not os.path.exists(training_data_path):
+            raise Exception(f"Model file not found at: {training_data_path}")
+        with open(training_data_path, 'rb') as f:
+            X_notes = pickle.load(f)
+        start_sequence = X_notes[np.random.randint(0, len(X_notes))]
+        return start_sequence
+    except Exception as e:
+        print(f"Error loading sequence: {e}")
+        raise
 
 
 # Helper function to convert note to MIDI number representation
@@ -174,12 +182,16 @@ def main_gru_generate_music(
         amount_of_notes, valid_notes, range_lower, range_upper,
         tempo, temperature, durations, dataset_path, model_weights_path, output_path
 ):
-    model_path = os.path.join(model_weights_path, "weights-epoch-15-loss-3.9767-acc-0.2276.weights.h5")
-    print(f"Loading model from: {model_path}")
-    if not os.path.exists(model_path):
-        raise Exception(f"Model file not found at: {model_path}")
-    model = load_gru_model(sequence_length=50, n_unique_notes=576,
-                           checkpoint_path=model_path)
+    try:
+        model_path = os.path.join(model_weights_path, "weights-epoch-15-loss-3.9767-acc-0.2276.weights.h5")
+        print(f"Loading model from: {model_path}")
+        if not os.path.exists(model_path):
+            raise Exception(f"Model file not found at: {model_path}")
+        model = load_gru_model(sequence_length=50, n_unique_notes=576,
+                               checkpoint_path=model_path)
+    except Exception as e:
+        print(f"Error loading mappings: {e}")
+        raise
 
     # Load mappings
     note_to_int, int_to_note, rest_indices = load_mappings(dataset_path)
